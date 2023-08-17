@@ -17,6 +17,6 @@
 
 #sed -i '$a src-git passwall https://github.com/xiaorouji/openwrt-passwall' feeds.conf.default
 
-echo 'src-git ddns-go ddns-go https://github.com/jeessy2/ddns-go' >>feeds.conf.default
+echo 'src-git ddns-go https://github.com/jeessy2/ddns-go' >>feeds.conf.default
 #sed -i '$a src-git ddns-go https://github.com/jeessy2/ddns-go.git' feeds.conf.default
 #sed -i '$a src-git-full small8 https://github.com/kenzok8/small-package' feeds.conf.default
