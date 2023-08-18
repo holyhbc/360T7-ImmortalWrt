@@ -19,5 +19,5 @@
 
 #sed -i '$a src-git ddns-go https://github.com/jeessy2/ddns-go.git' feeds.conf.default
 
-#sed -i '$a src-git-full small8 https://github.com/kenzok8/small-package' feeds.conf.default
-sed -i '$a src-git-full ddns-go https://github.com/sirpdboy/luci-app-ddns-go' feeds.conf.default
+sed -i '$a src-git-full small8 https://github.com/kenzok8/small-package' feeds.conf.default
+
