@@ -182,6 +182,8 @@ jobs:
       with:
         retain_days: 1
         keep_minimum_runs: 3
+        token: ${{ secrets.GH_TOKEN }}
+        body: |
 
     - name: Remove old Releases
       uses: dev-drprasad/delete-older-releases@v0.2.1
