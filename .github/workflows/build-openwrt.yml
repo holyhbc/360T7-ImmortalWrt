@@ -1,6 +1,6 @@
 #
 # Copyright (c) 2019-2020 P3TERX <https://p3terx.com>
-#
+# https://github.com/holyhbc/immortalwrtARM
 # This is free software, licensed under the MIT License.
 # See /LICENSE for more information.
 # https://github.com/padavanonly/immortalwrtARM
@@ -11,7 +11,7 @@
 name: Build OpenWrt
 
 env:
-  REPO_URL: https://github.com/holyhbc/immortalwrtARM
+  REPO_URL: https://github.com/immortalwrt/immortalwrt/tree/openwrt-23.05
   REPO_BRANCH: mt7981
   FEEDS_CONF: feeds.conf.default
   CONFIG_FILE: 360t7-hbc.config
