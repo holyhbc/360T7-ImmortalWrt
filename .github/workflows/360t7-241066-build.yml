@@ -1,10 +1,10 @@
-name: Build 360T7 OpenWrt Firmware
+name: Build 360T7 from 237 Source (6.6 Kernel)
 
 on:
   workflow_dispatch:
     inputs:
       ssh:
-        description: 'SSH connection to Actions'
+        description: 'Enable SSH debug'
         required: false
         default: 'false'
 
@@ -13,90 +13,74 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-    - name: Checkout code
+    - name: Checkout your repo (just for storing config)
       uses: actions/checkout@v4
 
-    - name: Initialization environment
-      env:
-        DEBIAN_FRONTEND: noninteractive
+    - name: Initialize build environment
       run: |
-        sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc
-        sudo -E apt-get -qq update
-        sudo -E apt-get -qq install build-essential clang flex bison g++ gawk gcc-multilib g++-multilib gettext git libncurses5-dev libssl-dev python3-distutils rsync unzip zlib1g-dev file wget
-        sudo -E apt-get -qq autoremove --purge
-        sudo -E apt-get -qq clean
+        sudo apt update -y
+        sudo apt install -y build-essential clang flex bison g++ gawk gcc-multilib g++-multilib \
+          gettext git libncurses5-dev libssl-dev python3-distutils rsync unzip zlib1g-dev file wget
 
-    - name: Clone source code
+    - name: Clone 237's source (openwrt-24.10-6.6 branch)
       run: |
-        git clone --depth 1 https://github.com/hanwckf/immortalwrt-mt798x.git openwrt
+        git clone --depth 1 -b openwrt-24.10-6.6 https://github.com/padavanonly/immortalwrt-mt798x-6.6.git openwrt
         cd openwrt
         ./scripts/feeds update -a
         ./scripts/feeds install -a
 
-    - name: Configure firmware
+    - name: Configure for 360T7 + HomeProxy
       run: |
         cd openwrt
-        # 使用360T7专用的配置文件模板
-        cp -f defconfig/mt7981-ax3000.config .config
-        # 开始自定义配置，加入常用插件
+        cp defconfig/mt7981-ax3000.config .config
         cat >> .config << EOF
-        # 基础设置
         CONFIG_TARGET_mediatek_filogic_DEVICE_qihoo_360t7=y
         CONFIG_IPV6=y
         
-        # 加入常用LuCI插件 (Web界面)
-        CONFIG_PACKAGE_luci-app-openclash=y
+        # HomeProxy 及相关依赖
+        CONFIG_PACKAGE_luci-app-homeproxy=y
+        CONFIG_PACKAGE_homeproxy=y
+        CONFIG_PACKAGE_xray-core=y
+        CONFIG_PACKAGE_sing-box=y
+        
+        # 其他常用插件
+        CONFIG_PACKAGE_luci-app-passwall=y
         CONFIG_PACKAGE_luci-app-aliyundrive-webdav=y
-        CONFIG_PACKAGE_luci-app-nlbwmon=y
         CONFIG_PACKAGE_luci-app-turboacc=y
-        CONFIG_PACKAGE_luci-app-wol=y
         CONFIG_PACKAGE_luci-app-filetransfer=y
         CONFIG_PACKAGE_luci-app-autoreboot=y
-        
-        # 一些依赖和内核模块
-        CONFIG_PACKAGE_kmod-tun=y
-        CONFIG_PACKAGE_kmod-usb3=y
-        CONFIG_PACKAGE_kmod-fuse=y
-        CONFIG_PACKAGE_openssl-engine=y
-        CONFIG_PACKAGE_bash=y
-        CONFIG_PACKAGE_curl=y
-        CONFIG_PACKAGE_wget-ssl=y
         
         # 硬件加速
         CONFIG_PACKAGE_kmod-mediatek_hnat=y
         CONFIG_PACKAGE_luci-app-turboacc_INCLUDE_hnat_mediatek=y
         EOF
-        # 让配置生效
         make defconfig
 
-    - name: Download package feeds
+    - name: Download packages
       run: |
         cd openwrt
         make download -j8
 
-    - name: SSH connection to Actions (Optional)
-      if: (github.event.inputs.ssh == 'true' && github.event_name == 'workflow_dispatch')
+    - name: SSH debug (optional)
+      if: github.event.inputs.ssh == 'true'
       uses: mxschmitt/action-tmate@v3
-      timeout-minutes: 120
 
-    - name: Compile firmware
+    - name: Compile
       run: |
         cd openwrt
-        echo "开始编译，请耐心等待..."
-        make -j$(nproc) V=s
+        make -j$(nproc)
 
-    - name: Organize firmware files
+    - name: Pack artifacts
       run: |
         cd openwrt/bin/targets/mediatek/filogic
-        mkdir -p ../../../artifacts
-        # 打包所有生成的固件和配置
-        tar -czvf ../../../artifacts/360t7_firmware.tar.gz *.bin *.itb *.tar.gz *.manifest 2>/dev/null || true
-        # 同时也保留一份sysupgrade固件在根目录，方便直接下载
-        cp *.sysupgrade.bin ../../../artifacts/ 2>/dev/null || true
+        mkdir -p artifacts
+        cp *.sysupgrade.bin artifacts/ 2>/dev/null || true
+        cp *.manifest artifacts/ 2>/dev/null || true
+        cd artifacts
+        tar -czvf 360t7_237_6.6.tar.gz *
 
-    - name: Upload firmware artifact
+    - name: Upload
       uses: actions/upload-artifact@v4
       with:
-        name: 360T7_OpenWrt_${{ github.run_id }}
-        path: openwrt/artifacts/*
-        if-no-files-found: warn
+        name: 360T7_6.6_${{ github.run_id }}
+        path: openwrt/bin/targets/mediatek/filogic/artifacts/*
