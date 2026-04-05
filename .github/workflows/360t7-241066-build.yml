@@ -38,10 +38,10 @@ jobs:
         CONFIG_IPV6=y
         
         # HomeProxy 及相关依赖
-        CONFIG_PACKAGE_luci-app-homeproxy=y
-        CONFIG_PACKAGE_homeproxy=y
-        CONFIG_PACKAGE_xray-core=y
-        CONFIG_PACKAGE_sing-box=y
+        #CONFIG_PACKAGE_luci-app-homeproxy=y
+       # CONFIG_PACKAGE_homeproxy=y
+       # CONFIG_PACKAGE_xray-core=y
+        #CONFIG_PACKAGE_sing-box=y
         
         # 其他常用插件
         CONFIG_PACKAGE_luci-app-passwall=y
